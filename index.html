@@ -1,0 +1,229 @@
+<html>
+  <head>
+    <title>打开小程序</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+    <script>
+    
+    
+    //   window.onerror = e => {
+    //     console.error(e)
+    //     alert('发生错误' + e)
+    //   }
+    </script>
+    <!-- weui 样式 -->
+    <link rel="stylesheet" href="https://res.wx.qq.com/open/libs/weui/2.4.1/weui.min.css"></link>
+    <!-- 调试用的移动端 console -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/eruda"></script> -->
+    <!-- <script>eruda.init();</script> -->
+    <!-- 公众号 JSSDK -->
+    <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+    <!-- 云开发 Web SDK -->
+    <script src="https://res.wx.qq.com/open/js/cloudbase/1.1.0/cloud.js"></script>
+    <script>
+      function docReady(fn) {
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+          fn()
+        } else {
+          document.addEventListener('DOMContentLoaded', fn);
+        }
+      }
+
+      docReady(async function() {
+        var ua = navigator.userAgent.toLowerCase()
+        var isWXWork = ua.match(/wxwork/i) == 'wxwork'
+        var isWeixin = !isWXWork && ua.match(/MicroMessenger/i) == 'micromessenger'
+        var isMobile = false
+        var isDesktop = false
+        if (navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|IEMobile)/i)) {
+          isMobile = true
+        } else {
+          isDesktop = true
+        }
+        console.warn('ua', ua)
+        console.warn(ua.match(/MicroMessenger/i) == 'micromessenger')
+        var m = ua.match(/MicroMessenger/i)
+        console.warn(m && m[0] === 'micromessenger')
+
+        if (false) {
+          var containerEl = document.getElementById('wechat-web-container')
+          containerEl.classList.remove('hidden')
+          containerEl.classList.add('full', 'wechat-web-container')
+
+          var launchBtn = document.getElementById('launch-btn')
+          launchBtn.addEventListener('ready', function (e) {
+            console.log('开放标签 ready')
+          })
+          launchBtn.addEventListener('launch', function (e) {
+            console.log('开放标签 success')
+          })
+          launchBtn.addEventListener('error', function (e) {
+            console.log('开放标签 fail', e.detail)
+          })
+
+          wx.config({
+            debug: true, // 调试时可开启
+            appId: 'wx44f99535154d86ae', // <!-- replace -->
+            timestamp: 0, // 必填，填任意数字即可
+            nonceStr: 'nonceStr', // 必填，填任意非空字符串即可
+            signature: 'signature', // 必填，填任意非空字符串即可
+            jsApiList: ['chooseImage'], // 必填，随意一个接口即可 
+            openTagList:['wx-open-launch-weapp'], // 填入打开小程序的开放标签名
+          })
+        } else if (isDesktop) {
+          // 在 pc 上则给提示引导到手机端打开
+          var containerEl = document.getElementById('desktop-web-container')
+          containerEl.classList.remove('hidden')
+          containerEl.classList.add('full', 'desktop-web-container')
+        }  else {
+          var containerEl = document.getElementById('public-web-container')
+          containerEl.classList.remove('hidden')
+          containerEl.classList.add('full', 'public-web-container')
+          var c = new cloud.Cloud({
+            // 必填，表示是未登录模式
+            identityless: true,
+            // 资源方 AppID
+            resourceAppid: 'wx44f99535154d86ae', // <!-- replace -->
+            // 资源方环境 ID
+            resourceEnv: 'cloud-3gv7ozoh1503360b', // <!-- replace -->
+          })
+          await c.init()
+          window.c = c
+
+          var buttonEl = document.getElementById('public-web-jump-button')
+          var buttonLoadingEl = document.getElementById('public-web-jump-button-loading')
+          try {
+            await openWeapp(() => {
+              buttonEl.classList.remove('weui-btn_loading')
+              buttonLoadingEl.classList.add('hidden')
+            })
+          } catch (e) {
+            buttonEl.classList.remove('weui-btn_loading')
+            buttonLoadingEl.classList.add('hidden')
+            throw e
+          }
+        }
+      })
+
+      async function openWeapp(onBeforeJump) {
+        var c = window.c
+        const res = await c.callFunction({
+          name: 'public',
+          data: {
+            action: 'getUrlScheme',
+          },
+        })
+        console.warn(res)
+        if (onBeforeJump) {
+          onBeforeJump()
+        }
+        location.href = res.result.openlink
+      }
+      
+      //页面启动弹出打开微信小程序
+    
+      
+    </script>
+    <style>
+      .hidden {
+        display: none;
+      }
+
+      .full {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+      }
+
+      .public-web-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .public-web-container p {
+        position: absolute;
+        top: 40%;
+      }
+
+      .public-web-container a {
+        position: absolute;
+        bottom: 40%;
+      }
+
+      .wechat-web-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .wechat-web-container p {
+        position: absolute;
+        top: 40%;
+      }
+
+      .wechat-web-container wx-open-launch-weapp {
+        position: absolute;
+        bottom: 40%;
+        left: 0;
+        right: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .desktop-web-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .desktop-web-container p {
+        position: absolute;
+        top: 40%;
+      }
+    </style>
+  </head>
+  <body>
+      
+      <div  style="display: flex; flex-direction: column; -webkit-box-align: center; align-items: center; height: 100%;">
+            <img style="border-radius: width: 64px; height: 64px; padding-top:100px;" src="http://wx.qlogo.cn/mmhead/Q3auHgzwzM4wXBY6py7O1UhRaW2xxiaDNib39PicemwG3lGQTNL95QXdQ/132">
+            <p style=" margin-top: 16px;">湖科职表白墙</p >
+            <div style="display: flex; -webkit-box-align: center; align-items: center; flex-direction: row; margin-top: 8px; height: 16px;"><svg width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g id="页面-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" fill-opacity="0.3"><g id="微信内场景" transform="translate(-176.000000, -812.000000)" fill="#000000"><g id="icon9" transform="translate(176.000000, 812.000000)"><path d="M11.3361967,8.66050077 L11.1789137,8.66304579 C10.7033442,8.66304579 10.426618,8.31418144 10.6053953,7.91197299 C10.7278216,7.62631149 11.0040274,7.40569744 11.3302259,7.3332391 C12.2029744,7.12257565 12.7959531,6.44047769 12.7959531,5.64749734 C12.7959531,4.68611492 11.8780792,3.90266241 10.7316294,3.90266241 C9.58517963,3.90266241 8.66730564,4.68611492 8.66730564,5.64749734 L8.66730564,10.4398296 C8.66730564,12.1277754 7.15859847,13.4873269 5.30031949,13.4873269 C3.44204051,13.4873269 1.93333333,12.1277754 1.93333333,10.4398296 C1.93333333,8.95977617 3.1015619,7.69644178 4.69329073,7.45623003 L4.82108626,7.45623003 C5.18112878,7.45623003 5.44046858,7.67176377 5.4404683,7.9795716 C5.44062186,8.03231416 5.43934077,8.05668642 5.4341334,8.08793065 C5.42711363,8.13004926 5.41344505,8.17036253 5.39460473,8.20730283 C5.27985616,8.47504949 4.98651411,8.70685787 4.66977413,8.78603673 C3.8033311,8.99517815 3.20404686,9.67311146 3.20404686,10.4398296 C3.20404686,11.401212 4.12192084,12.1846645 5.26837061,12.1846645 C6.41482037,12.1846645 7.33269436,11.401212 7.33269436,10.4398296 L7.33269436,5.64749734 C7.33269436,3.95955157 8.84140153,2.6 10.6996805,2.6 C12.5579595,2.6 14.0666667,3.95955157 14.0666667,5.64749734 C14.0666667,7.13540842 12.9259173,8.38402762 11.3361967,8.66050077 Z" id="图标颜色"></path></g></g></g></svg><p style="color: rgba(0, 0, 0, 0.3); font-size: 14px; margin-left: 4px;">小程序</p >
+            </div>
+            
+            <!--<div id="go" style="color:#ffffff;font-size:14px;width:100px;height:30px;background:#07C160;text-align:center;line-height:30px;border-radius:5px;margin-top:30px" >前往微信打开</div>-->
+            
+            <!--<p style="font-size: 14px;color: rgba(0, 0, 0, 0.5);margin-top: 24px;">无法打开时，可使用默认浏览器打开。<a style=" transition: all 0.15s ease-out 0s; cursor: pointer; text-decoration: none; outline: none; color: rgb(108, 125, 162);" onclick='copyText(this)'  >复制链接</ a></p >-->
+            
+        </div>
+      
+    <div class="page full">
+      <div id="public-web-container" class="hidden">
+        <!--<p class="">正在打开 “湖科职表白墙”...</p> <!-- replace -->
+        <a id="public-web-jump-button" href="javascript:" class="weui-btn weui-btn_primary weui-btn_loading" onclick="openWeapp()">
+          <span id="public-web-jump-button-loading" class="weui-primary-loading weui-primary-loading_transparent"><i class="weui-primary-loading__dot"></i></span>
+          打开小程序
+        </a>
+      </div>
+      
+      
+      <div id="wechat-web-container" class="hidden">
+        <p class="">点击打开“湖科职表白墙”</a></p> 
+        <!-- replace -->
+        <!-- 跳转小程序的开放标签。文档 https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_Open_Tag.html -->
+        <wx-open-launch-weapp id="launch-btn" username="gh_ea6d9ffce0a2" path="/pages/home/index_2/index_2"> <!-- replace -->
+          <template>
+            <button style="width: 200px; height: 45px; text-align: center; font-size: 17px; display: block; margin: 0 auto; padding: 8px 24px; border: none; border-radius: 4px; background-color: #07c160; color:#fff;">打开小程序</button>
+          </template>
+        </wx-open-launch-weapp>
+      </div>
+      <div id="desktop-web-container" class="hidden">
+        <p style=" margin-top: 16px;">请在用微信扫码下方二维码打开小程序</p>
+         <img style="width: 120px; height: 120px;position: absolute; top: 50%;" src="https://img.yvu.cc/FlByJ-_MJF-RssPT9qUAPaKdYnI9">
+      </div>
+    </div>
+  </body>
+</html>
